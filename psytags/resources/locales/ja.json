@@ -471,6 +471,7 @@
   "{1} selected": "{1} 件選択",
   "{1} tracks": "{1} トラック",
   "{1} tracks / {2} files": "{1} トラック / {2} ファイル",
+  "Tracks in the tags: {1}": "タグ上のトラック数: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: embedded_json には括弧のグループがちょうど 1 つ必要です",
   "{1}: field {2} is missing": "{1}: フィールド {2} がありません",
   "{1}: format must be {2}": "{1}: format は {2} でなければなりません",

@@ -264,6 +264,16 @@ class BlockMoveTests(unittest.TestCase):
         self.addCleanup(d.deleteLater)
         return d
 
+    def test_a_hint_when_the_tags_name_another_edition(self):
+        d = self._dialog()
+        self.assertNotIn("Tags", d.hint.text())
+        for i, f in enumerate(self.files):
+            f.set("TRACK", f"{i + 4}/18")
+        from psytags.ui.dialogs.tagsources import AdjustDialog
+        d = AdjustDialog(d.album, list(self.files))
+        self.addCleanup(d.deleteLater)
+        self.assertIn("18", d.hint.text())
+
     def _mark(self, d, *rows):
         d.table.clearSelection()
         for r in rows:

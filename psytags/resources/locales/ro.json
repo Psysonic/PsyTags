@@ -471,6 +471,7 @@
   "{1} selected": {"one": "{1} selectat", "few": "{1} selectate", "other": "{1} selectate"},
   "{1} tracks": {"one": "{1} piesă", "few": "{1} piese", "other": "{1} de piese"},
   "{1} tracks / {2} files": "{1} piese / {2} fișiere",
+  "Tracks in the tags: {1}": "Piese conform etichetelor: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: embedded_json necesită exact un grup între paranteze",
   "{1}: field {2} is missing": "{1}: lipsește câmpul {2}",
   "{1}: format must be {2}": "{1}: format trebuie să fie {2}",

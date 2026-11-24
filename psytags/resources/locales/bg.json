@@ -471,6 +471,7 @@
   "{1} selected": "Избрани: {1}",
   "{1} tracks": {"one": "{1} песен", "other": "{1} песни"},
   "{1} tracks / {2} files": "Песни: {1} / файлове: {2}",
+  "Tracks in the tags: {1}": "Песни според таговете: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: embedded_json изисква точно една група в скоби",
   "{1}: field {2} is missing": "{1}: липсва полето {2}",
   "{1}: format must be {2}": "{1}: format трябва да е {2}",

@@ -195,6 +195,7 @@ EN_MORE: dict[str, str] = {
         "with drag & drop or Alt+↑/↓:",
     "Track": "Track", "Titel (Quelle)": "Title (source)", "Länge": "Length", "Datei": "File",
     "{1} Tracks / {2} Dateien": "{1} tracks / {2} files", "{1} Längen passen nicht": "{1} lengths do not match",
+    "Tracks laut Tags: {1}": "Tracks in the tags: {1}",
     "&Speichern": "&Save",
 
     # help

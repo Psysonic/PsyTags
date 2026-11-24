@@ -471,6 +471,7 @@
   "{1} selected": "{1} merket",
   "{1} tracks": {"one": "{1} spor", "other": "{1} spor"},
   "{1} tracks / {2} files": "{1} spor / {2} filer",
+  "Tracks in the tags: {1}": "Spor ifølge taggene: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: embedded_json trenger nøyaktig én gruppe i parentes",
   "{1}: field {2} is missing": "{1}: feltet {2} mangler",
   "{1}: format must be {2}": "{1}: format må være {2}",

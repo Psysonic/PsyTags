@@ -471,6 +471,7 @@
   "{1} selected": "已选择 {1} 项",
   "{1} tracks": "{1} 首曲目",
   "{1} tracks / {2} files": "{1} 首曲目 / {2} 个文件",
+  "Tracks in the tags: {1}": "标签中的曲目数: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}:embedded_json 需要恰好一个括号分组",
   "{1}: field {2} is missing": "{1}：缺少字段 {2}",
   "{1}: format must be {2}": "{1}:format 必须是 {2}",
