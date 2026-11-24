@@ -4,6 +4,8 @@ Every version has its own section. The section of the version in `psytags/__init
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-11-24
+
 ### Added
 
 - The track check of a tag source has the buttons "By length" and "By title": files whose names do not fit their sound can be matched to the tracks by playing time, and back.
