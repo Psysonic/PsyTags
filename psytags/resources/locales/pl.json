@@ -471,6 +471,7 @@
   "{1} selected": "Zaznaczono: {1}",
   "{1} tracks": {"one": "{1} utwór", "few": "{1} utwory", "many": "{1} utworów", "other": "{1} utworu"},
   "{1} tracks / {2} files": "Utwory: {1} / pliki: {2}",
+  "Tracks in the tags: {1}": "Utwory według tagów: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: embedded_json wymaga dokładnie jednej grupy w nawiasach",
   "{1}: field {2} is missing": "{1}: brak pola {2}",
   "{1}: format must be {2}": "{1}: format musi mieć wartość {2}",

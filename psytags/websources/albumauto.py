@@ -99,11 +99,30 @@ def _score(row: dict) -> int:
     return int(m.group(1)) if m else 0
 
 
-def digital_first(rows: list[dict], n_files: int, prefer_digital: bool = True) -> list[dict]:
-    """Search results by score; among equal scores, digital editions of the right size on top."""
-    if not prefer_digital:
-        return sorted(rows, key=lambda r: -_score(r))
-    return sorted(rows, key=lambda r: (-_score(r), not (is_digital(r) and track_count(r, n_files) == n_files)))
+def tag_total(tracks: list) -> int | None:
+    """The track count of the edition the files come from, when their tags tell one ("4/18",
+    TRACKTOTAL) that is larger than the number of files: some songs of it are missing."""
+    totals = set()
+    for t in tracks:
+        total = _first(t, "TRACK").partition("/")[2] or _first(t, "TRACKTOTAL") or _first(t, "TOTALTRACKS")
+        if total.strip().isdigit():
+            totals.add(int(total))
+    if len(totals) != 1:
+        return None
+    total = totals.pop()
+    return total if total > len(tracks) else None
+
+
+def digital_first(rows: list[dict], n_files: int, prefer_digital: bool = True,
+                  total: int | None = None) -> list[dict]:
+    """Search results by score; among equal scores, the edition with the track count of the
+    tags (``tag_total``) and then digital editions of the right size on top."""
+    sizes = {n_files, total or n_files}
+
+    def key(r):
+        other_size = total is not None and track_count(r, n_files) != total
+        return -_score(r), other_size, prefer_digital and not (is_digital(r) and track_count(r, n_files) in sizes)
+    return sorted(rows, key=key)
 
 
 def candidate_rows(matches: list, n_files: int, mbid: str = "", prefer_digital: bool = True) -> list[dict]:
@@ -304,32 +323,94 @@ def prealign(tracks: list, album: Album) -> list:
     return slots + rest
 
 
-def align_by_length(tracks: list, album: Album, max_gap: float = 3.0) -> list:
-    """Files in the order of the source's tracks by their playing time alone, for files whose
-    names do not fit their sound. The closest lengths pair first, the title breaks a tie;
-    files without a length within ``max_gap`` seconds fill the free slots in their order."""
-    tracks = [t for t in tracks if t is not None]
-    n = max(album.tracks, 1)
+_NO_PAIR = 1e6
+
+
+def _assign(cost: list[list[float]]) -> list[int]:
+    """The column of each row with the smallest total cost (Hungarian method, square matrix)."""
+    n = len(cost)
+    u, v, p, way = [0.0] * (n + 1), [0.0] * (n + 1), [0] * (n + 1), [0] * (n + 1)
+    for i in range(1, n + 1):
+        p[0], j0 = i, 0
+        minv, used = [float("inf")] * (n + 1), [False] * (n + 1)
+        while True:
+            used[j0] = True
+            i0, delta, j1 = p[j0], float("inf"), 0
+            for j in range(1, n + 1):
+                if not used[j]:
+                    cur = cost[i0 - 1][j - 1] - u[i0] - v[j]
+                    if cur < minv[j]:
+                        minv[j], way[j] = cur, j0
+                    if minv[j] < delta:
+                        delta, j1 = minv[j], j
+            for j in range(n + 1):
+                if used[j]:
+                    u[p[j]] += delta
+                    v[j] -= delta
+                else:
+                    minv[j] -= delta
+            j0 = j1
+            if p[j0] == 0:
+                break
+        while j0:
+            j1 = way[j0]
+            p[j0] = p[j1]
+            j0 = j1
+    out = [0] * n
+    for j in range(1, n + 1):
+        if p[j]:
+            out[p[j] - 1] = j - 1
+    return out
+
+
+def _length_pairs(tracks: list, album: Album, max_gap: float) -> dict[int, int]:
+    """file index -> track index by playing time: the smallest total difference, where every
+    pair lies within ``max_gap`` seconds. A matching title outweighs up to
+    ``MIN_LENGTH_MARGIN`` seconds, so songs of equal length keep their names; the file order
+    breaks what is left."""
     infos = file_infos(tracks)
     titles = [albummatch.variants(album.value("TITLE", i)) for i in range(album.tracks)]
-    pairs = []
-    for t in range(album.tracks):
-        have = albummatch.seconds(album.lengths[t]) if t < len(album.lengths) else None
-        for f, info in enumerate(infos):
+    lengths = [albummatch.seconds(album.lengths[t]) if t < len(album.lengths) else None
+               for t in range(album.tracks)]
+    size = max(len(infos), album.tracks)
+    cost = [[_NO_PAIR] * size for _ in range(size)]
+    for f, info in enumerate(infos):
+        for t, have in enumerate(lengths):
             if have and info.length and abs(have - info.length) <= max_gap:
-                pairs.append((round(abs(have - info.length)), -albummatch.similarity(info.titles, titles[t]),
-                              abs(f - t), f, t))
+                cost[f][t] = (abs(have - info.length)
+                              + albummatch.MIN_LENGTH_MARGIN * (1 - albummatch.similarity(info.titles, titles[t]))
+                              + 0.001 * abs(f - t))
+    return {f: t for f, t in enumerate(_assign(cost)) if f < len(infos) and cost[f][t] < _NO_PAIR}
+
+
+def _slots(tracks: list, n: int, pairs: dict[int, int]) -> list:
     slots: list = [None] * n
-    placed: set[int] = set()
-    for *_, f, t in sorted(pairs):
-        if f not in placed and slots[t] is None:
-            slots[t] = tracks[f]
-            placed.add(f)
-    rest = [t for i, t in enumerate(tracks) if i not in placed]
+    for f, t in pairs.items():
+        slots[t] = tracks[f]
+    rest = [t for i, t in enumerate(tracks) if i not in pairs]
     for i in range(n):
         if slots[i] is None and rest:
             slots[i] = rest.pop(0)
     return slots + rest
+
+
+def align_by_length(tracks: list, album: Album, max_gap: float = 3.0) -> list:
+    """Files in the order of the source's tracks by their playing time alone, for files whose
+    names do not fit their sound (see ``_length_pairs``); files without a length within
+    ``max_gap`` seconds fill the free slots in their order."""
+    tracks = [t for t in tracks if t is not None]
+    return _slots(tracks, max(album.tracks, 1), _length_pairs(tracks, album, max_gap))
+
+
+def initial_align(tracks: list, album: Album, max_gap: float = 3.0) -> list:
+    """The first order of the track check: when every file finds a track of its length, the
+    sound decides (names may be shifted by an old tagging), otherwise the titles."""
+    tracks = [t for t in tracks if t is not None]
+    if tracks and len(tracks) <= album.tracks:
+        pairs = _length_pairs(tracks, album, max_gap)
+        if len(pairs) == len(tracks):
+            return _slots(tracks, max(album.tracks, 1), pairs)
+    return prealign(tracks, album)
 
 
 def group_albums(tracks: list) -> list[list]:

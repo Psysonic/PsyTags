@@ -10,6 +10,8 @@ Every version has its own section. The section of the version in `psytags/__init
 
 ### Changed
 
+- The track check places the files by their playing time when every file finds a track of its length, so names shifted by an old tagging no longer decide; "By length" now looks for the smallest total difference instead of pairing the closest lengths first.
+- Files whose tags name a larger edition ("4/18") bring that edition to the top of the search results, and the track check says how many tracks the tags count when the chosen release has another number.
 - README and SECURITY.md say which downloads are signed (Windows installer and macOS disk images) and how to check them.
 - The Windows installer can be built signed: with `/DSign` and a sign tool named `certum`, Inno Setup signs PsyTags.exe, the setup and the uninstaller. Builds without it, as in CI, stay unsigned.
 - A local package build takes the Last.fm key from `psytags/lastfm.key` of the checkout when `PSYTAGS_LASTFM_KEY` is not set; the file is ignored by git.

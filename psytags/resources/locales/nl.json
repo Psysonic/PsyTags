@@ -471,6 +471,7 @@
   "{1} selected": "{1} geselecteerd",
   "{1} tracks": {"one": "{1} track", "other": "{1} tracks"},
   "{1} tracks / {2} files": "{1} tracks / {2} bestanden",
+  "Tracks in the tags: {1}": "Nummers volgens de tags: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: embedded_json heeft precies één groep tussen haakjes nodig",
   "{1}: field {2} is missing": "{1}: veld {2} ontbreekt",
   "{1}: format must be {2}": "{1}: format moet {2} zijn",

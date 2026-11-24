@@ -471,6 +471,7 @@
   "{1} selected": "{1} kijelölve",
   "{1} tracks": "{1} szám",
   "{1} tracks / {2} files": "{1} szám / {2} fájl",
+  "Tracks in the tags: {1}": "Számok a tagek szerint: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: az embedded_json pontosan egy zárójeles csoportot igényel",
   "{1}: field {2} is missing": "{1}: hiányzik a(z) {2} mező",
   "{1}: format must be {2}": "{1}: a format értéke {2} kell legyen",

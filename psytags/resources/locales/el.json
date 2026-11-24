@@ -471,6 +471,7 @@
   "{1} selected": {"one": "{1} επιλεγμένο", "other": "{1} επιλεγμένα"},
   "{1} tracks": {"one": "{1} κομμάτι", "other": "{1} κομμάτια"},
   "{1} tracks / {2} files": "{1} κομμάτια / {2} αρχεία",
+  "Tracks in the tags: {1}": "Κομμάτια κατά τα tags: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: το embedded_json χρειάζεται ακριβώς μία ομάδα σε παρενθέσεις",
   "{1}: field {2} is missing": "{1}: λείπει το πεδίο {2}",
   "{1}: format must be {2}": "{1}: το format πρέπει να είναι {2}",

@@ -245,8 +245,11 @@ class AdjustDialog(QDialog):
         self.cover = cover
         # Fewer files than tracks: empty slots ("(ohne Datei)") fill the rest. They
         # can be moved like files, e.g. to the top when the first song is missing.
-        # Files are placed by their titles; what has no track stands behind the last one.
-        self.files = albumauto.prealign(list(tracks), album)
+        # Files are placed by their lengths when all of them fit, else by their titles;
+        # what has no track stands behind the last one.
+        self.files = albumauto.initial_align(list(tracks), album)
+        # Tags that name a larger edition ("4/18"): a hint when the chosen release is another one
+        self.tag_total = albumauto.tag_total(list(tracks))
         self.setWindowTitle(tr("Zuordnung prüfen"))
         self.resize(1180, 660)
         lay = QVBoxLayout(self)
@@ -391,6 +394,8 @@ class AdjustDialog(QDialog):
         n_files = sum(1 for t in self.files if t is not None)
         if self.album.tracks and self.album.tracks != n_files:
             hints.append(tr("{1} Tracks / {2} Dateien", n_src, n_files))
+        if self.tag_total and self.tag_total != self.album.tracks:
+            hints.append(tr("Tracks laut Tags: {1}", self.tag_total))
         if mismatches:
             hints.append(tr("{1} Längen passen nicht", mismatches))
         self.hint.setText(" · ".join(hints))
@@ -407,7 +412,7 @@ class AdjustDialog(QDialog):
     def _show_dvd(self, on: bool) -> None:
         """Switch between the CD tracks alone and the whole release; the files are placed anew."""
         self.album = self.whole if on and self.whole is not None else self.slim
-        self.files = albumauto.prealign([t for t in self.files if t is not None], self.album)
+        self.files = albumauto.initial_align([t for t in self.files if t is not None], self.album)
         if hasattr(self, "hint"):
             self._fill()
 

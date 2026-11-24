@@ -471,6 +471,7 @@
   "{1} selected": "Выбрано: {1}",
   "{1} tracks": {"one": "{1} трек", "few": "{1} трека", "many": "{1} треков", "other": "{1} трека"},
   "{1} tracks / {2} files": "Треков: {1} / файлов: {2}",
+  "Tracks in the tags: {1}": "Треков по тегам: {1}",
   "{1}: embedded_json needs exactly one group in brackets": "{1}: embedded_json требует ровно одну группу в скобках",
   "{1}: field {2} is missing": "{1}: нет поля {2}",
   "{1}: format must be {2}": "{1}: format должен быть {2}",
