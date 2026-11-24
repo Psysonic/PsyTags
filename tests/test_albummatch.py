@@ -309,6 +309,36 @@ class CandidateTests(unittest.TestCase):
         rows = [{"_url": "a"}, {"_url": "b"}]
         self.assertEqual(albumauto.digital_first(rows, 2), rows)
 
+    def test_the_edition_the_tags_count_comes_first(self):
+        rows = [{"_url": "cd10", "Score": "100", "Tracks": "10", "Format": "CD"},
+                {"_url": "dig10", "Score": "100", "Tracks": "10", "Format": "Digital Media"},
+                {"_url": "cd18", "Score": "100", "Tracks": "18", "Format": "CD"},
+                {"_url": "weak18", "Score": "60", "Tracks": "18", "Format": "CD"}]
+        got = [r["_url"] for r in albumauto.digital_first(rows, 10, total=18)]
+        self.assertEqual(got, ["cd18", "dig10", "cd10", "weak18"])
+        got = [r["_url"] for r in albumauto.digital_first(rows, 10, False, total=18)]
+        self.assertEqual(got, ["cd18", "cd10", "dig10", "weak18"])
+
+
+class TagTotalTests(unittest.TestCase):
+    @staticmethod
+    def _t(**tags):
+        return SimpleNamespace(get=lambda name: [tags[name]] if name in tags else [])
+
+    def test_total_of_a_partial_album(self):
+        files = [self._t(TRACK="04/18"), self._t(TRACK="07/18"), self._t(TRACK="11/18")]
+        self.assertEqual(albumauto.tag_total(files), 18)
+
+    def test_total_from_its_own_field(self):
+        self.assertEqual(albumauto.tag_total([self._t(TRACK="4", TRACKTOTAL="18"), self._t(TRACK="5")]), 18)
+        self.assertEqual(albumauto.tag_total([self._t(TRACK="4", TOTALTRACKS="18"), self._t(TRACK="5")]), 18)
+
+    def test_no_total_when_it_tells_nothing_new(self):
+        self.assertIsNone(albumauto.tag_total([self._t(TRACK="1/2"), self._t(TRACK="2/2")]))
+        self.assertIsNone(albumauto.tag_total([self._t(TRACK="1/10"), self._t(TRACK="2/18")]))
+        self.assertIsNone(albumauto.tag_total([self._t(TRACK="1"), self._t()]))
+        self.assertIsNone(albumauto.tag_total([]))
+
 
 def _track(path, title="", album="A", disc="", track=""):
     t = Track(path)
@@ -335,6 +365,54 @@ class PlanAndAlignTests(unittest.TestCase):
     def test_prealign_empty_slot_for_a_missing_song(self):
         b = _track("b.mp3", "Two")
         self.assertEqual(albumauto.prealign([b], _album(["One", "Two"])), [None, b])
+
+    def test_align_by_length_follows_the_sound_not_the_name(self):
+        # Every name fits a track, but each file holds the next song; the last file holds the first.
+        album = _album(["One", "Two", "Three", "Four"])
+        album.lengths = ["4:59", "4:00", "3:35", "4:42"]
+        files = [_track(f"{n}.mp3", n) for n in ("One", "Two", "Three", "Four")]
+        for t, secs in zip(files, (240.4, 214.6, 282.0, 299.5)):
+            t.data.info.length = secs
+        self.assertEqual(albumauto.prealign(files, album), files)
+        self.assertEqual(albumauto.align_by_length(files, album), [files[3], files[0], files[1], files[2]])
+
+    def test_align_by_length_title_breaks_a_tie_and_strays_fill_gaps(self):
+        album = _album(["One", "Two", "Three"])
+        album.lengths = ["3:26", "3:26", "5:00"]
+        a, b, c = _track("a.mp3", "Two"), _track("b.mp3", "One"), _track("c.mp3", "Other")
+        for t, secs in zip((a, b, c), (206.0, 206.0, 100.0)):
+            t.data.info.length = secs
+        self.assertEqual(albumauto.align_by_length([a, b, c], album), [b, a, c])
+
+    @staticmethod
+    def _timed(names, secs):
+        files = [_track(f"{i:02}.mp3", n) for i, n in enumerate(names)]
+        for t, s in zip(files, secs):
+            t.data.info.length = s
+        return files
+
+    def test_align_by_length_takes_the_smallest_total_gap(self):
+        # Closest pair first would give the 367.7 file to 369 and leave the 371.0 file without a track.
+        album = _album(["A", "B", "C", "D"])
+        album.lengths = ["369000", "200000", "366000", "367000"]
+        files = self._timed(["W", "X", "Y", "Z"], [371.0, 201.0, 366.6, 367.7])
+        self.assertEqual(albumauto.align_by_length(files, album), files)
+
+    def test_wrong_names_with_fitting_lengths_follow_the_sound(self):
+        # The names of the last files are shifted by two songs; every length fits its own row.
+        album = _album(["One", "Two", "Three", "Four", "Five", "Six"])
+        album.lengths = ["3:35", "4:41", "3:58", "6:52", "5:40", "4:28"]
+        names = ["One", "Two", "Five", "Six", "Seven", "Eight"]
+        files = self._timed(names, [217.4, 283.3, 238.5, 412.5, 340.6, 269.2])
+        self.assertEqual(albumauto.initial_align(files, album), files)
+        self.assertNotEqual(albumauto.prealign(files, album), files)
+
+    def test_names_decide_when_the_lengths_do_not_fit(self):
+        # Live files for a studio release: the lengths say nothing, the titles place them.
+        album = _album(["One", "Two"])
+        album.lengths = ["3:00", "4:00"]
+        files = self._timed(["Two", "One"], [300.0, 200.0])
+        self.assertEqual(albumauto.initial_align(files, album), [files[1], files[0]])
 
     def test_plan_respects_disabled_fields(self):
         a, b = _track("a.mp3", "One"), _track("b.mp3", "Two")

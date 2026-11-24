@@ -1330,7 +1330,8 @@ class MainWindow(QMainWindow):
                             == QMessageBox.StandardButton.Retry:
                         continue
                     return
-                rows = albumauto.digital_first(rows, len(tracks), self.opts.prefer_digital)
+                rows = albumauto.digital_first(rows, len(tracks), self.opts.prefer_digital,
+                                               albumauto.tag_total(tracks))
                 stage = "results"
             if stage == "results":
                 d = ResultsDialog(src, rows, self)

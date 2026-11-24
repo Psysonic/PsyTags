@@ -245,8 +245,11 @@ class AdjustDialog(QDialog):
         self.cover = cover
         # Fewer files than tracks: empty slots ("(ohne Datei)") fill the rest. They
         # can be moved like files, e.g. to the top when the first song is missing.
-        # Files are placed by their titles; what has no track stands behind the last one.
-        self.files = albumauto.prealign(list(tracks), album)
+        # Files are placed by their lengths when all of them fit, else by their titles;
+        # what has no track stands behind the last one.
+        self.files = albumauto.initial_align(list(tracks), album)
+        # Tags that name a larger edition ("4/18"): a hint when the chosen release is another one
+        self.tag_total = albumauto.tag_total(list(tracks))
         self.setWindowTitle(tr("Zuordnung prüfen"))
         self.resize(1180, 660)
         lay = QVBoxLayout(self)
@@ -323,6 +326,14 @@ class AdjustDialog(QDialog):
             b.clicked.connect(lambda _=False, d=d: self._move(d))
             row.addWidget(b)
             QShortcut(QKeySequence(key), self, lambda d=d: self._move(d))
+        # Files whose names do not fit their sound: the playing time places them instead.
+        for text, tip, by_length in (
+                (tr("Nach Länge"), tr("Ordnet die Dateien nach ihrer Spieldauer den Tracks zu"), True),
+                (tr("Nach Titel"), tr("Ordnet die Dateien wieder nach ihren Titeln zu"), False)):
+            b = QPushButton(text)
+            b.setToolTip(tip)
+            b.clicked.connect(lambda _=False, v=by_length: self._realign(v))
+            row.addWidget(b)
         # A release with a DVD whose files may be on the list: its tracks can be shown
         self.dvd_box = QCheckBox(tr("DVD-Spuren anzeigen"))
         self.dvd_box.setToolTip(tr("Zeigt auch die Tracks der DVD, damit Sie übrige Dateien zuordnen können"))
@@ -383,6 +394,8 @@ class AdjustDialog(QDialog):
         n_files = sum(1 for t in self.files if t is not None)
         if self.album.tracks and self.album.tracks != n_files:
             hints.append(tr("{1} Tracks / {2} Dateien", n_src, n_files))
+        if self.tag_total and self.tag_total != self.album.tracks:
+            hints.append(tr("Tracks laut Tags: {1}", self.tag_total))
         if mismatches:
             hints.append(tr("{1} Längen passen nicht", mismatches))
         self.hint.setText(" · ".join(hints))
@@ -399,9 +412,14 @@ class AdjustDialog(QDialog):
     def _show_dvd(self, on: bool) -> None:
         """Switch between the CD tracks alone and the whole release; the files are placed anew."""
         self.album = self.whole if on and self.whole is not None else self.slim
-        self.files = albumauto.prealign([t for t in self.files if t is not None], self.album)
+        self.files = albumauto.initial_align([t for t in self.files if t is not None], self.album)
         if hasattr(self, "hint"):
             self._fill()
+
+    def _realign(self, by_length: bool) -> None:
+        files = [t for t in self.files if t is not None]
+        self.files = (albumauto.align_by_length if by_length else albumauto.prealign)(files, self.album)
+        self._fill()
 
     def _sync_current(self, src, dst, cur):
         r = src.indexOfTopLevelItem(cur) if cur is not None else -1

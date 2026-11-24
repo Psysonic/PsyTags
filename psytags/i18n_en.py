@@ -6,6 +6,9 @@ EN_MORE: dict[str, str] = {
     # actions
     "&Neu": "&New", "&Duplizieren": "&Duplicate", "&Löschen": "&Delete",
     "Nach &oben": "Move &up", "Nach &unten": "Move &down",
+    "Nach Länge": "By length", "Nach Titel": "By title",
+    "Ordnet die Dateien nach ihrer Spieldauer den Tracks zu": "Matches the files to the tracks by their playing time",
+    "Ordnet die Dateien wieder nach ihren Titeln zu": "Matches the files to the tracks by their titles again",
     # action type names (actions.NAMES) and case modes (actions.CASE_MODES)
 
     # converters
@@ -192,6 +195,7 @@ EN_MORE: dict[str, str] = {
         "with drag & drop or Alt+↑/↓:",
     "Track": "Track", "Titel (Quelle)": "Title (source)", "Länge": "Length", "Datei": "File",
     "{1} Tracks / {2} Dateien": "{1} tracks / {2} files", "{1} Längen passen nicht": "{1} lengths do not match",
+    "Tracks laut Tags: {1}": "Tracks in the tags: {1}",
     "&Speichern": "&Save",
 
     # help
